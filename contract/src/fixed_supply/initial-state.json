@@ -1,0 +1,10 @@
+{
+  "type": "fixed_supply",
+  "maxSupply": 1000000000,
+  "ticker": "ticker",
+  "name": "name",
+  "owner": "g-HsAODsIOoTG4MgvmeOTmqyA_RKMupujUuok-nrmkg",
+  "balances": {
+    "g-HsAODsIOoTG4MgvmeOTmqyA_RKMupujUuok-nrmkg": 1000000000
+  }
+}

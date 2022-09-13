@@ -1,0 +1,11 @@
+{
+  "type": "mintable",
+  "maxSupply": 1000000000,
+  "mintable": 1000000000,
+  "mintPrice": 0.1,
+  "ticker": "ticker",
+  "name": "name",
+  "owner": "g-HsAODsIOoTG4MgvmeOTmqyA_RKMupujUuok-nrmkg",
+  "balances": {
+  }
+}

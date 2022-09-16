@@ -146,7 +146,7 @@ export const PstDetails = (props) => {
           </div>
         }
         <div className='center'>
-          <button className='submitButton' disabled={true} onClick={onSubmitButtonClicked}>Transfer</button>
+          <button className='submitButton' onClick={onSubmitButtonClicked}>Transfer</button>
         </div>
       </>
     );

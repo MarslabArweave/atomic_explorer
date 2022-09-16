@@ -248,7 +248,7 @@ export const PstDetails = (props) => {
         </div>
         <div className='center'>
           <div>
-            <div className='pstMidiumKey'> Token price: </div>
+            <div className='pstMidiumKey'> Token price($AR): </div>
           </div>
           <div className='pstMidiumValue'>
             &nbsp;{pstState.mintPrice ? pstState.mintPrice : 'Unknown'}

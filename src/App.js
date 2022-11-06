@@ -33,7 +33,7 @@ const Home = (props) => {
           value={pstAddress}
           onChange={e => setPstAddress(e.target.value)}
           rows="1" 
-          placeholder="Enter the pst address here"
+          placeholder="Enter the token address here"
         />
       </div>
       <div className='center'>

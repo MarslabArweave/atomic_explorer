@@ -10,8 +10,7 @@ import
     isWellFormattedAddress, 
     readState, 
     getBalance, 
-    makeTransfer,
-    mintToken 
+    makeTransfer
   } 
 from '../lib/api';
 import { useParams } from 'react-router';
@@ -29,18 +28,14 @@ export const PstDetails = (props) => {
   const [target, setTarget] = React.useState("");
   const [quantity, setQuantity] = React.useState("");
   const [submitResult, setSubmitResult] = React.useState("");
-  const [isMintting, setIsMintting] = React.useState(false);
-  const [mintResult, setMintResult] = React.useState("");
-  const [mintAmout, setMintAmout] = React.useState("");
 
   useEffect(async () => {
     if (!isWellFormattedAddress(params.pstAddress)) {
       setIsInit(false);
-      setInitResult("The pst address you entered seems not valid, please check!");
+      setInitResult("The wrc-20 token address you entered seems not valid, please check!");
       return;
     }
-    const contract = connectContract(params.pstAddress);
-    console.log('contract object: ', contract);
+    connectContract(params.pstAddress);
     setInitResult("");
     readState().then(ret => {
       setIsInit(false);
@@ -48,8 +43,8 @@ export const PstDetails = (props) => {
         setInitResult(ret.result);
         return;
       } else {
-        if (!ret.result.ticker || !ret.result.name || !ret.result.balances) {
-          setInitResult("This contract address seems not pst address!");
+        if (!ret.result.symbol || !ret.result.name || !ret.result.balances) {
+          setInitResult("This contract address seems not wrc-20 token address!");
           return;
         }
         setPstState(ret.result);
@@ -79,39 +74,10 @@ export const PstDetails = (props) => {
           <div className='pstMidiumKey'> Your balance: </div>
           </div>
           <div className='pstMidiumValue'>
-            &nbsp;{balance ? balance : 'Unknown'}
+            &nbsp;{balance ? (balance * Math.pow(10,-pstState.decimals)).toFixed(pstState.decimals) : 'Unknown'}
           </div>
           &nbsp;&nbsp;&nbsp;<button className='refreshButton' disabled={refreshDisabled} onClick={onRefreshButtonClicked}>Refresh</button>
         </div>
-
-        { pstState.type === 'mintable' &&
-          <>
-          <hr />
-          <div className='center'> 
-            <div className='pstLargeKey'> Mint token(s) </div>
-          </div>
-          <div className='center'>
-            <div className='pstMidiumKey'> Amount: </div>
-            &nbsp;&nbsp;&nbsp;&nbsp;
-            <TextareaAutosize
-              className='searchInput'
-              value={mintAmout}
-              onChange={e => setMintAmout(e.target.value)}
-              rows="1" 
-              placeholder='e.g. 1234'
-            />
-          </div>
-          {isMintting && <ProgressSpinner />}
-          {mintResult !== '' &&
-            <div className='center'>
-              <div className="darkRow">{mintResult}</div>
-            </div>
-          }
-          <div className='center'>
-            <button className='submitButton' onClick={onMintButtonClicked}>Mint</button>
-          </div>
-          </>
-        }
         
         <hr />
         <div className='center'> 
@@ -152,27 +118,11 @@ export const PstDetails = (props) => {
     );
   }
 
-  async function onMintButtonClicked() {
-    setIsMintting(true);
-    setMintResult("");
-    mintToken(Number(mintAmout)).then(ret => {
-      setIsMintting(false);
-      console.log('mint ret: ', ret);
-      if (ret.status === false) {
-        setMintResult(ret.result);
-        return;
-      } else {
-        setMintResult("Mint success!")
-      }
-    });
-  }
-
   async function onSubmitButtonClicked() {
     setIsSubmitting(true);
     setSubmitResult("");
-    makeTransfer(target, Number(quantity)).then(ret => {
+    makeTransfer(target, Math.floor(Number(quantity * Math.pow(10,pstState.decimals)))).then(ret => {
       setIsSubmitting(false);
-      console.log('transfer ret: ', ret);
       if (ret.status === false) {
         setSubmitResult(ret.result);
         return;
@@ -214,18 +164,10 @@ export const PstDetails = (props) => {
     <div>
       <div className='center'>
         <div>
-          <div className='pstLargeKey'> Ticker: </div>
+          <div className='pstLargeKey'> Token: </div>
         </div>
         <div className='pstLargeValue'>
-          &nbsp;{pstState.name ? pstState.name : 'Unknown'}(${pstState.ticker ? pstState.ticker : 'Unknown'})
-        </div>
-      </div>
-      <div className='center'>
-        <div>
-        <div className='pstMidiumKey'> Type: </div>
-        </div>
-        <div className='pstMidiumValue'>
-          &nbsp;{pstState.type ? pstState.type : 'Unknown'}
+          &nbsp;{pstState.name ? pstState.name : 'Unknown'}(${pstState.symbol ? pstState.symbol : 'Unknown'})
         </div>
       </div>
       <div className='center'>
@@ -233,29 +175,9 @@ export const PstDetails = (props) => {
         <div className='pstMidiumKey'> Max supply: </div>
         </div>
         <div className='pstMidiumValue'>
-          &nbsp;{pstState.maxSupply ? pstState.maxSupply : 'Unknown'}
+          &nbsp;{pstState.totalSupply ? pstState.totalSupply * Math.pow(10,-pstState.decimals) : 'Unknown'}
         </div>
       </div>
-      { pstState.type === 'mintable' &&
-        <>
-        <div className='center'>
-          <div>
-            <div className='pstMidiumKey'> Mintable: </div>
-          </div>
-          <div className='pstMidiumValue'>
-            &nbsp;{pstState.mintable ? pstState.mintable : 'Unknown'}
-          </div>
-        </div>
-        <div className='center'>
-          <div>
-            <div className='pstMidiumKey'> Token price($AR): </div>
-          </div>
-          <div className='pstMidiumValue'>
-            &nbsp;{pstState.mintPrice ? pstState.mintPrice : 'Unknown'}
-          </div>
-        </div>
-        </>
-      }
       <hr />
       { !isWalletConnected &&
         <>

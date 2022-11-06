@@ -6,6 +6,7 @@ import {
 
 LoggerFactory.INST.logLevel('error');
 
+// const warp = WarpFactory.forLocal(1984);
 // const warp = WarpFactory.forTestnet();
 const warp = WarpFactory.forMainnet();
 const arweave = warp.arweave;
@@ -14,9 +15,7 @@ let walletAddress = undefined;
 let isConnectWallet = false;
 
 export function connectContract(contractTxId) {
-  contract = warp.pst(contractTxId).setEvaluationOptions({
-    ignoreExceptions: false,
-  });
+  contract = warp.contract(contractTxId);
   return contract;
 }
 
@@ -37,7 +36,7 @@ export async function readState() {
     console.log('read state: ', result);
   } catch (error) {
     status = false;
-    result = 'Read contract state error!';
+    result = 'Read state error!'
   }
   return {status: status, result: result};
 }
@@ -49,8 +48,11 @@ export async function getBalance() {
   let result = "";
   let status = true;
   try {
-    console.log('wallet addr: ', walletAddress);
-    result = (await contract.currentBalance(walletAddress));
+    result = (await contract.dryWrite({
+      function: 'balanceOf',
+      target: walletAddress,
+    })).result;
+    console.log(result);
   } catch {
     status = false;
     result = 'Interact with contract error!';
@@ -58,46 +60,8 @@ export async function getBalance() {
   return {status: status, result: result};
 }
 
-export async function mintToken(mintAmout) {
-  if (!contract) {
-    return {status: false, result: 'Contract connection error!'};
-  }
-  if (!Number.isInteger(mintAmout) || mintAmout <= 0) {
-    return {status: false, result: 'Amount you enter must be positive integer!'};
-  }
-  const readRes = await readState();
-  if (readRes.status === false) {
-    return readRes;
-  }
-  const mintableAmount = readRes.result.mintable;
-  if (mintableAmount < mintAmout) {
-    return {status: false, result: 'Mint amout exceeds maximum!'};
-  }
-  const mintPrice = readRes.result.mintPrice;
-  const mintFee = (mintAmout * mintPrice).toString();
-
-  const target = readRes.result.owner;
-
-  let result = "";
-  let status = true;
-  try {
-    result = await contract.writeInteraction(
-      {
-        function: 'mint',
-        qty: mintAmout,
-      },
-      { transfer:
-        {
-          target: target,
-          winstonQty: arweave.ar.arToWinston(mintFee),
-        }
-      }
-    );
-  } catch {
-    status = false;
-    result = 'Interact with contract error!';
-  }
-  return {status: status, result: result};
+export function arLessThan(a, b) {
+  return arweave.ar.isLessThan(arweave.ar.arToWinston(a), arweave.ar.arToWinston(b));
 }
 
 export async function makeTransfer(target, quantity) {
@@ -107,15 +71,22 @@ export async function makeTransfer(target, quantity) {
   if (!isWellFormattedAddress(target)) {
     return {status: false, result: 'Target wallet address format error'};
   }
+  const arBalance = await arweave.wallets.getBalance(walletAddress);
+  if (arLessThan(arweave.ar.winstonToAr(arBalance), '0.02')) {
+    return {status: false, result: 'You should hold at least 0.02$AR in your wallet to pay for network fee!'};
+  }
   if (!quantity || !Number.isInteger(quantity) || quantity <= 0) {
-    return {status: false, result: 'Transfer amout must be positive integer'};
+    return {status: false, result: `Transfer amout must be positive integer: ${quantity}`};
   }
 
   let result = "";
   let status = true;
   try {
-    await contract.transfer({qty: quantity, target: target});
-    console.log('update result: ', result);
+    await contract.writeInteraction({
+      function: 'transfer',
+      amount: quantity, 
+      to: target
+    });
   } catch {
     status = false;
     result = 'Interact with contract error!';

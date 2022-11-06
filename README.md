@@ -2,13 +2,11 @@
 
 Tokenscope is a fully-onchain DApp developed by mARsLab. 
 
-You can simply check information about Arweave profit sharing token(PST) and make transactions by several clicks.
+You can simply check information about Arweave WRC-20 tokens and make transactions by several clicks.
 
-See DApp on Arweave mainnet [here](https://arweave.net/s7ksIBcS3fPMuKcoQEGNg0R-QyDmx5sZria00t9ydDw).
+See DApp on Arweave mainnet [here](https://arweave.net/_tfx0j4nhCwRDYmgU6XryFDceF52ncPKVivot5ijwdQ).
 
 # Directory structue
-
-`contract`: Contains pst contract template and unittest. For now, there are two types of PST - fixed supply & mintable token.
 
 `src`: Front end pages written in react.
 

@@ -2,25 +2,28 @@ import {
   WarpFactory,
   LoggerFactory,
 } from 'warp-contracts';
-/* global BigInt */
+import { intelliContract } from './intelliContract';
 
 LoggerFactory.INST.logLevel('error');
 
 // const warp = WarpFactory.forLocal(1984);
 // const warp = WarpFactory.forTestnet();
-const warp = WarpFactory.forMainnet();
+const warp = WarpFactory.forMainnet({
+  dbLocation: './cache/warp'+(new Date().getTime()).toString(), 
+  inMemory: false
+});
 const arweave = warp.arweave;
 let contract = undefined;
 let walletAddress = undefined;
 let isConnectWallet = false;
 
 export function connectContract(contractTxId) {
-  contract = warp.contract(contractTxId);
-  return contract;
+  contract = new intelliContract(warp);
+  contract.connectContract(contractTxId);
 }
 
 export async function connectWallet(walletJwk) {
-  contract = contract.connect(walletJwk);
+  contract.connectWallet(walletJwk);
   walletAddress = await arweave.wallets.jwkToAddress(walletJwk);
   isConnectWallet = true;
 }
@@ -48,7 +51,7 @@ export async function getBalance() {
   let result = "";
   let status = true;
   try {
-    result = (await contract.dryWrite({
+    result = (await contract.viewState({
       function: 'balanceOf',
       target: walletAddress,
     })).result;

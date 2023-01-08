@@ -15,10 +15,13 @@ import
 from '../lib/api';
 import { useParams } from 'react-router';
 import { WalletSelectButton } from './WalletSelectButton';
+import { sleep } from 'warp-contracts';
+import { mul, pow } from '../lib/math';
 
 export const PstDetails = (props) => {
   const params = useParams();
   const [refreshDisabled, setRefreshDisabled] = React.useState(true);
+  const [submitDisabled, setSubmitDisabled] = React.useState(false);
   const [isInit, setIsInit] = React.useState(true);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [initResult, setInitResult] = React.useState("");
@@ -36,6 +39,7 @@ export const PstDetails = (props) => {
       return;
     }
     connectContract(params.pstAddress);
+    await sleep(3000);
     setInitResult("");
     readState().then(ret => {
       setIsInit(false);
@@ -74,7 +78,7 @@ export const PstDetails = (props) => {
           <div className='pstMidiumKey'> Your balance: </div>
           </div>
           <div className='pstMidiumValue'>
-            &nbsp;{balance ? (balance * Math.pow(10,-pstState.decimals)).toFixed(pstState.decimals) : 'Unknown'}
+            &nbsp;{balance ? mul(balance, pow(10, -pstState.decimals)).toFixed(pstState.decimals) : 'Unknown'}
           </div>
           &nbsp;&nbsp;&nbsp;<button className='refreshButton' disabled={refreshDisabled} onClick={onRefreshButtonClicked}>Refresh</button>
         </div>
@@ -112,7 +116,7 @@ export const PstDetails = (props) => {
           </div>
         }
         <div className='center'>
-          <button className='submitButton' onClick={onSubmitButtonClicked}>Transfer</button>
+          <button className='submitButton' disabled={submitDisabled} onClick={onSubmitButtonClicked}>Transfer</button>
         </div>
       </>
     );
@@ -120,9 +124,17 @@ export const PstDetails = (props) => {
 
   async function onSubmitButtonClicked() {
     setIsSubmitting(true);
+    setSubmitDisabled(true);
     setSubmitResult("");
-    makeTransfer(target, Math.floor(Number(quantity * Math.pow(10,pstState.decimals)))).then(ret => {
+    const qty = Number(quantity);
+    if (isNaN(qty)) {
+      setSubmitResult("The quantity you enter is not valid!");
       setIsSubmitting(false);
+      return;
+    }
+    makeTransfer(target, mul(qty, pow(10, pstState.decimals))).then(ret => {
+      setIsSubmitting(false);
+      setSubmitDisabled(false);
       if (ret.status === false) {
         setSubmitResult(ret.result);
         return;
@@ -175,7 +187,15 @@ export const PstDetails = (props) => {
         <div className='pstMidiumKey'> Max supply: </div>
         </div>
         <div className='pstMidiumValue'>
-          &nbsp;{pstState.totalSupply ? pstState.totalSupply * Math.pow(10,-pstState.decimals) : 'Unknown'}
+          &nbsp;{pstState.totalSupply ? mul(pstState.totalSupply, pow(10, -pstState.decimals)).toFixed(pstState.decimals) : 'Unknown'}
+        </div>
+      </div>
+      <div className='center'>
+        <div>
+        <div className='pstMidiumKey'> Decimals: </div>
+        </div>
+        <div className='pstMidiumValue'>
+          &nbsp;{pstState.decimals ? pstState.decimals : 'Unknown'}
         </div>
       </div>
       <hr />

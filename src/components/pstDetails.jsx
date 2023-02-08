@@ -10,7 +10,10 @@ import
     isWellFormattedAddress, 
     readState, 
     getBalance, 
-    makeTransfer
+    makeTransfer,
+    getDomainNames,
+    getName,
+    getTarget
   } 
 from '../lib/api';
 import { useParams } from 'react-router';
@@ -29,6 +32,8 @@ export const PstDetails = (props) => {
   const [pstState, setPstState] = React.useState({});
   const [isWalletConnected, setIsWalletConnected] = React.useState(false);
   const [target, setTarget] = React.useState("");
+  const [targetTip, setTargetTip] = React.useState();
+  const [targetAddress, setTargetAddress] = React.useState("");
   const [quantity, setQuantity] = React.useState("");
   const [submitResult, setSubmitResult] = React.useState("");
 
@@ -40,6 +45,7 @@ export const PstDetails = (props) => {
     }
     connectContract(params.pstAddress);
     await sleep(3000);
+    await getDomainNames();
     setInitResult("");
     readState().then(ret => {
       setIsInit(false);
@@ -70,6 +76,30 @@ export const PstDetails = (props) => {
     });
   }, [isWalletConnected]);
 
+  const onTargetChange = async (value) => {
+    setTarget(value);
+    if (value.length > 0 && value[0] === '@') {
+      const targetRet = await getTarget('wallet', value);
+      if (!targetRet.status ||
+          !targetRet.result ||
+          !isWellFormattedAddress(targetRet.result.wallet)
+      ) {
+        setTargetTip(`Polaris name ${value}.wallet is not valid!`);
+        return;
+      } else {
+        setTargetTip(`Target wallet address is ${targetRet.result.wallet}!`);
+      }
+      setTargetAddress(targetRet.result.wallet);
+    } else {
+      setTargetTip(undefined);
+      setTargetAddress(value);
+    }
+  };
+
+  const renderTargetTip = () => {
+
+  };
+
   function renderMoreInfo() {
     return (
       <>
@@ -93,11 +123,16 @@ export const PstDetails = (props) => {
           <TextareaAutosize
             className='searchInput'
             value={target}
-            onChange={e => setTarget(e.target.value)}
+            onChange={e => onTargetChange(e.target.value)}
             rows="1" 
-            placeholder='e.g. mcPY8LTyJ_8win2CgrHcrnxuJ9FXXIsCGwjXl8gMjP8'
+            placeholder={`'@polaris_name' OR 'wallet address'`}
           />
         </div>
+        {targetTip &&
+          <div className='center'>
+            <div className="darkRow">{targetTip}</div>
+          </div>
+        }
         <div className='center'>
           <div className='pstMidiumKey'> Quantity: </div>
           &nbsp;&nbsp;&nbsp;&nbsp;
@@ -132,7 +167,7 @@ export const PstDetails = (props) => {
       setIsSubmitting(false);
       return;
     }
-    makeTransfer(target, mul(qty, pow(10, pstState.decimals))).then(ret => {
+    makeTransfer(targetAddress, mul(qty, pow(10, pstState.decimals))).then(ret => {
       setIsSubmitting(false);
       setSubmitDisabled(false);
       if (ret.status === false) {

@@ -6,6 +6,9 @@ import { intelliContract } from './intelliContract';
 
 LoggerFactory.INST.logLevel('error');
 
+// addresses
+const polarisContractAddress = 'GYMOnUEpGlEcbDBU0CFl7kgfv9i5Jw2qC-XR3She0-o';
+
 // const warp = WarpFactory.forLocal(1984);
 // const warp = WarpFactory.forTestnet();
 const warp = WarpFactory.forMainnet({
@@ -13,17 +16,24 @@ const warp = WarpFactory.forMainnet({
   inMemory: false
 });
 const arweave = warp.arweave;
+
 let contract = undefined;
+let polarisContract = undefined;
+
 let walletAddress = undefined;
 let isConnectWallet = false;
 
 export function connectContract(contractTxId) {
   contract = new intelliContract(warp);
   contract.connectContract(contractTxId);
+  
+  polarisContract = new intelliContract(warp);
+  polarisContract.connectContract(polarisContractAddress);
 }
 
 export async function connectWallet(walletJwk) {
   contract.connectWallet(walletJwk);
+  polarisContract.connectWallet(walletJwk);
   walletAddress = await arweave.wallets.jwkToAddress(walletJwk);
   isConnectWallet = true;
 }
@@ -100,4 +110,93 @@ export async function makeTransfer(target, quantity) {
 export const isWellFormattedAddress = (input) => {
   const re = /^[a-zA-Z0-9_-]{43}$/;
   return re.test(input);
+}
+
+// polaris api
+
+export async function getOwner(domain, name) {
+  if (!polarisContract) {
+    return {status: false, result: 'Please connect contract first!'};
+  }
+
+  let status = true;
+  let result = '';
+  try {
+    result = (await polarisContract.viewState({
+      function: 'getOwner',
+      params: {
+        domain,
+        name
+      }
+    })).result;
+  } catch (err) {
+    status = false;
+    result = err;
+  }
+
+  return {status, result};
+}
+
+export async function getName(tx) {
+  if (!polarisContract) {
+    return {status: false, result: 'Please connect contract first!'};
+  }
+
+  let status = true;
+  let result = '';
+  try {
+    result = (await polarisContract.viewState({
+      function: 'getName',
+      params: {
+        tx
+      }
+    })).result;
+  } catch (err) {
+    status = false;
+    result = err;
+  }
+
+  return {status, result};
+}
+
+export async function getTarget(domain, name) {
+  if (!polarisContract) {
+    return {status: false, result: 'Please connect contract first!'};
+  }
+
+  let status = true;
+  let result = '';
+  try {
+    result = (await polarisContract.viewState({
+      function: 'getTarget',
+      params: {
+        domain,
+        name
+      }
+    })).result;
+  } catch (err) {
+    status = false;
+    result = err;
+  }
+
+  return {status, result};
+}
+
+export async function getDomainNames() {
+  if (!polarisContract) {
+    return {status: false, result: 'Please connect contract first!'};
+  }
+
+  let status = true;
+  let result = '';
+  try {
+    result = (await polarisContract.viewState({
+      function: 'getDomainNames',
+    })).result;
+  } catch (err) {
+    status = false;
+    result = err;
+  }
+
+  return {status, result};
 }

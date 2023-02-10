@@ -85,7 +85,7 @@ export async function transfer(tokenAddress, target, amount) {
   let status = true;
   let result = '';
   try {
-    await pntContract.writeInteraction({
+    await token.writeInteraction({
       function: 'transfer',
       to: target,
       amount: amount

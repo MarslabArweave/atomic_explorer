@@ -40,7 +40,7 @@ export const Home = (props) => {
     var address;
     if (inputContent.length > 0 && inputContent[0] === '@') {
       const name = inputContent.substring(1);
-      if (!domainNameList[type][inputContent] || !isWellFormattedAddress(domainNameList[type][name]['target'])) {
+      if (!domainNameList[type][name] || !isWellFormattedAddress(domainNameList[type][name]['target'])) {
         toaster.push(toast('error', `Polaris name '${name}' is not point to a(n) ${type} address!`));
         return;
       } else {

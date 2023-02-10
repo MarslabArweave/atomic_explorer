@@ -117,8 +117,8 @@ export const TokenInfo = (props) => {
       {title: 'Total Supply', content: totalSupply},
       {title: 'Holdlers', content: Object.keys(tokenState.balances).length},
       // {title: 'Transactions', content: ''}, // TODO
-      {title: 'Top 1 Holdler', content: 
-        `${await renderWalletAddress(holdler)} (${(max/tokenState.totalSupply*100).toFixed(2)}%)`},
+      {title: 'Top 1 Holdler', content: await renderWalletAddress(holdler)},
+      {title: 'Top 1 Ratio', content: `${(max/tokenState.totalSupply*100).toFixed(2)}%`},
     ]);
     
     return {status: true, result: 'fetch token info secceeded!'};
@@ -148,8 +148,8 @@ export const TokenInfo = (props) => {
       address = target;
     }
     
-    const plainAmount = mul(amount, pow(10, decimals)).toFixed(0);
-    const ret = await transfer(address, plainAmount);
+    const plainAmount = Number(mul(amount, pow(10, decimals)).toFixed(0));
+    const ret = await transfer(params.address, address, plainAmount);
     await fetchBalance();
 
     return ret;

@@ -2,12 +2,16 @@ import {
   WarpFactory,
   LoggerFactory,
 } from 'warp-contracts';
+import { selectWeightedPstHolder } from 'smartweave';
+import { mul, pow } from './math';
 import { intelliContract } from './intelliContract';
+import { stat } from 'fs';
 
 LoggerFactory.INST.logLevel('error');
 
 // addresses
-const polarisContractAddress = 'GYMOnUEpGlEcbDBU0CFl7kgfv9i5Jw2qC-XR3She0-o';
+const polarisContractAddress = 'tU5g9rDKAQJwYgi_leautnj52qxlqjyWhENO0tSQjq8';
+export const pntAddress = "tU5g9rDKAQJwYgi_leautnj52qxlqjyWhENO0tSQjq8";
 
 // const warp = WarpFactory.forLocal(1984);
 // const warp = WarpFactory.forTestnet();
@@ -16,103 +20,88 @@ const warp = WarpFactory.forMainnet({
   inMemory: false
 });
 const arweave = warp.arweave;
-
-let contract = undefined;
-let polarisContract = undefined;
-
 let walletAddress = undefined;
-let isConnectWallet = false;
+export let isConnectWallet = false;
 
-export function connectContract(contractTxId) {
-  contract = new intelliContract(warp);
-  contract.connectContract(contractTxId);
-  
-  polarisContract = new intelliContract(warp);
-  polarisContract.connectContract(polarisContractAddress);
-}
+let polarisContract = undefined;
+let pntContract = undefined;
 
 export async function connectWallet(walletJwk) {
-  contract.connectWallet(walletJwk);
   polarisContract.connectWallet(walletJwk);
-  walletAddress = await arweave.wallets.jwkToAddress(walletJwk);
+  pntContract.connectWallet(walletJwk);
   isConnectWallet = true;
+  walletAddress = await arweave.wallets.jwkToAddress(walletJwk);
 }
 
-export async function readState() {
-  if (!contract) {
-    return {status: false, result: 'Contract connection error!'};
-  }
-  let result = "";
+export async function connectContract() {
+  polarisContract = new intelliContract(warp);
+  polarisContract.connectContract(polarisContractAddress);
+
+  pntContract = new intelliContract(warp);
+  pntContract.connectContract(pntAddress);
+
+  return {status: true, result: 'Connect contract success!'};
+}
+
+export async function getState(txID) {
+  const contract = new intelliContract(warp);
+  contract.connectContract(txID);
+
   let status = true;
+  let result = '';
   try {
     result = (await contract.readState()).cachedValue.state;
-    console.log('read state: ', result);
-  } catch (error) {
+  } catch (err) {
     status = false;
-    result = 'Read state error!'
+    result = err;
   }
-  return {status: status, result: result};
+
+  return {status, result};
 }
 
-export async function getBalance() {
-  if (!contract) {
-    return {status: false, result: 'Contract connection error!'};
+export async function transfer(tokenAddress, target, amount) {
+  if (!isConnectWallet) {
+    return {status: false, result: 'Please connect your wallet first!'};
   }
-  let result = "";
-  let status = true;
-  try {
-    result = (await contract.viewState({
-      function: 'balanceOf',
-      target: walletAddress,
-    })).result;
-    console.log(result);
-  } catch {
-    status = false;
-    result = 'Interact with contract error!';
-  }
-  return {status: status, result: result};
-}
-
-export function arLessThan(a, b) {
-  return arweave.ar.isLessThan(arweave.ar.arToWinston(a), arweave.ar.arToWinston(b));
-}
-
-export async function makeTransfer(target, quantity) {
-  if (!contract) {
-    return {status: false, result: 'Contract connection error'};
+  if (amount <= 0) {
+    return {status: false, result: 'Amount is to tiny to transfer!'};
   }
   if (!isWellFormattedAddress(target)) {
-    return {status: false, result: 'Target wallet address format error'};
+    return {status: false, result: 'Target address is not valid!'};
   }
-  const arBalance = await arweave.wallets.getBalance(walletAddress);
-  if (arLessThan(arweave.ar.winstonToAr(arBalance), '0.02')) {
-    return {status: false, result: 'You should hold at least 0.02$AR in your wallet to pay for network fee!'};
+  if (!minARBalanceCheck('0.01')) {
+    return {status: false, result: 'You should have at least 0.01$AR in wallet to pay for network fee!'};
   }
-  if (!quantity || !Number.isInteger(quantity) || quantity <= 0) {
-    return {status: false, result: `Transfer amout must be positive integer: ${quantity}`};
+  
+  const token = new intelliContract(warp);
+  token.connectContract(tokenAddress);
+  token.connectWallet('use_wallet');
+
+  const balanceRet = await getBalance(tokenAddress);
+  if (balanceRet.status && balanceRet.result < amount) {
+    return {status: false, result: 'insufficient funds!'};
   }
 
-  let result = "";
   let status = true;
+  let result = '';
   try {
-    await contract.writeInteraction({
+    await pntContract.writeInteraction({
       function: 'transfer',
-      amount: quantity, 
-      to: target
+      to: target,
+      amount: amount
     });
-  } catch {
+
+    status = true;
+    result = 'Transfer done!';
+  } catch (err) {
     status = false;
-    result = 'Interact with contract error!';
+    result = err;
   }
-  return {status: status, result: 'Transfer success'};
+
+  return {status, result};
 }
 
-export const isWellFormattedAddress = (input) => {
-  const re = /^[a-zA-Z0-9_-]{43}$/;
-  return re.test(input);
-}
-
-// polaris api
+// Polaris name api
 
 export async function getOwner(domain, name) {
   if (!polarisContract) {
@@ -199,4 +188,78 @@ export async function getDomainNames() {
   }
 
   return {status, result};
+}
+
+// common api
+
+export function getWalletAddress() {
+  return walletAddress;
+}
+
+async function minARBalanceCheck(threshInAR) {
+  const arBalanceRet = await getBalance('ar');
+  if (arBalanceRet.status && arLessThan(arBalanceRet.result, threshInAR)) {
+    return false;
+  }
+  return true;
+}
+
+export function arLessThan(a, b) {
+  return arweave.ar.isLessThan(arweave.ar.arToWinston(a), arweave.ar.arToWinston(b));
+}
+
+export const isWellFormattedAddress = (input) => {
+  const re = /^[a-zA-Z0-9_-]{43}$/;
+  return re.test(input);
+}
+
+export const getContractTxInfo = async (contractAddress) => {
+  let tx = await arweave.transactions.get(contractAddress);
+  tx.owner_address = await arweave.wallets.ownerToAddress(tx.owner);
+  return {status: true, result: tx};
+};
+
+export const getDateByTx = async (txId) => {
+  const txRet = await arweave.transactions.getStatus(txId);
+  if (txRet.status !== 200) {
+    return {status: false, result: 'Cannot find specific TxID on Arweave Network!'};
+  }
+  const blockHeight = txRet.confirmed.block_height;
+  var elapsed = (await arweave.blocks.getCurrent()).height - blockHeight;
+  const date = new Date();
+  date.setMinutes(date.getMinutes() - elapsed * 2);
+  return {status: true, result: date.toLocaleDateString()};
+};
+
+export const getContractData = async (contractAddress) => {
+  const data = await arweave.transactions.getData(contractAddress, {decode: true, string: true});
+  return {status: true, result: data};
+};
+
+export async function getBalance(tokenAddress) {
+  if (!isConnectWallet) {
+    return {status: false, result: 'Please connect your wallet first!'};
+  }
+
+  if (!isWellFormattedAddress(tokenAddress) && tokenAddress !== 'ar') {
+    return {status: false, result: 'Pst address not valid!'};
+  }
+
+  let result = "";
+  let status = true;
+  try {
+    if (tokenAddress === 'ar') {
+      result = arweave.ar.winstonToAr(await arweave.wallets.getBalance(getWalletAddress()));
+    } else {
+      result = await (await warp.contract(tokenAddress).viewState({
+        function: 'balanceOf',
+        target: getWalletAddress(),
+      })).result.balance;
+    }
+  } catch (error) {
+    status = false;
+    result = error.message;
+  }
+
+  return {status: status, result: result};
 }

@@ -1,3 +1,4 @@
+import "./ProgressSpinner.css";
 
 export const ProgressSpinner = () => {
 	return (

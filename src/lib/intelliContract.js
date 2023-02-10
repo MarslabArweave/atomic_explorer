@@ -40,11 +40,11 @@ export class intelliContract {
     return await this.contract4Read.viewState(input);
   }
 
-  async readState() {
-    return await this.contract4Read.readState();
-  }
-
   async writeInteraction(input, options) {
     return await this.contract4Write.writeInteraction(input, options);
+  }
+
+  async readState() {
+    return await this.contract4Read.readState();
   }
 }

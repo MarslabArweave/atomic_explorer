@@ -1,18 +1,40 @@
-import './App.css';
-
 import React from 'react';
-import { Routes, Route, Link } from 'react-router-dom';
-import TextareaAutosize from 'react-textarea-autosize';
-import { PstDetails } from './components/pstDetails';
+import { Routes, Route } from 'react-router-dom';
+import { Navigation } from './components/Navigation';
+import { 
+  connectContract, 
+} from './lib/api';
+import 'rsuite/dist/rsuite.css';
+import './App.css';
+import { Home } from './components/Home';
+import { sleep } from 'warp-contracts';
+import { TokenInfo } from './components/TokenInfo';
 
 const App = () => {
+  const [isContractConnected, setIsContractConnected] = React.useState(false);
+  const [isWalletConnected, setIsWalletConnected] = React.useState(false);
+
+  React.useEffect(async ()=>{
+    await connectContract();
+    await sleep(3000);
+    setIsContractConnected(true);
+  }, []);
+
+  if (!isContractConnected) {
+    return (
+      <div className='darkRow'>
+        Loading Contract ...
+      </div>
+    );
+  }
   return (
     <div id="app">
       <div id="content">
+        <Navigation setIsWalletConnected={setIsWalletConnected}/>
         <main>
           <Routes>
-            <Route path="/" name="" element={<Home />} />
-            <Route path="/:pstAddress" element={<Details />} />
+            <Route path="/" name="" element={<HomeFrame />} />
+            <Route path="/token/:address" element={<TokenInfoFrame walletConnect={isWalletConnected}/>} />
           </Routes>
         </main>
       </div>
@@ -20,34 +42,18 @@ const App = () => {
   );
 };
 
-const Home = (props) => {
-  const [pstAddress, setPstAddress] = React.useState("");
-
+const HomeFrame = (props) => {
   return (
     <>
-      <header>TokenScope</header>
-
-      <div className='center'>
-        <TextareaAutosize
-          className='searchInput'
-          value={pstAddress}
-          onChange={e => setPstAddress(e.target.value)}
-          rows="1" 
-          placeholder="Enter the token address here"
-        />
-      </div>
-      <div className='center'>
-        <Link className='submitButton' to={`/${pstAddress}`}>Search</Link>
-      </div>
+      <Home />
     </>
   );
 };
 
-const Details = (props) => {
+const TokenInfoFrame = (props) => {
   return (
     <>
-      <header>Pst details</header>
-      <PstDetails />
+      <TokenInfo walletConnect={props.walletConnect}/>
     </>
   );
 };

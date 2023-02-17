@@ -3,7 +3,6 @@ import { Input, InputGroup, Radio, RadioGroup, useToaster, Message } from 'rsuit
 import { useNavigate } from 'react-router-dom';
 import { getDomainNames, isWellFormattedAddress } from '../lib/api';
 import { PageLoading } from './PageLoading/PageLoading';
-import { SubmitButton } from './SubmitButton/SubmitButton';
 import SearchIcon from '@rsuite/icons/Search';
 
 const centerStyle = {
@@ -69,15 +68,15 @@ export const Home = (props) => {
     <>
       <RadioGroup 
         inline 
-        inputContent='searchType'
+        name='type'
         appearance='picker'
         defaultValue='token'
         onChange={setType}
         style={{borderWidth: 0, margin: '3rem', justifyContent: 'center', alignItems: 'center', display: 'flex'}}
       >
         <Radio value='token'><p style={radioType}>Token</p></Radio>
-        <Radio value='collect' disabled><p style={radioType}>Collectible</p></Radio>
-        <Radio value='nft' disabled><p style={radioType}>Atomic-NFT</p></Radio>
+        <Radio value='collectible'><p style={radioType}>Collectible</p></Radio>
+        <Radio value='nft'><p style={radioType}>Atomic-NFT</p></Radio>
       </RadioGroup>
       <div style={centerStyle}>
         <InputGroup size='md' style={{ width: 450 }}>

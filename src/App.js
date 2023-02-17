@@ -9,6 +9,8 @@ import './App.css';
 import { Home } from './components/Home';
 import { sleep } from 'warp-contracts';
 import { TokenInfo } from './components/TokenInfo';
+import { NFTInfo } from './components/NFTInfo';
+import { CollectibleInfo } from './components/CollectibleInfo';
 
 const App = () => {
   const [isContractConnected, setIsContractConnected] = React.useState(false);
@@ -35,6 +37,8 @@ const App = () => {
           <Routes>
             <Route path="/" name="" element={<HomeFrame />} />
             <Route path="/token/:address" element={<TokenInfoFrame walletConnect={isWalletConnected}/>} />
+            <Route path="/nft/:address" element={<NFTInfoFrame walletConnect={isWalletConnected}/>} />
+            <Route path="/collectible/:address" element={<CollectibleInfoFrame walletConnect={isWalletConnected}/>} />
           </Routes>
         </main>
       </div>
@@ -54,6 +58,22 @@ const TokenInfoFrame = (props) => {
   return (
     <>
       <TokenInfo walletConnect={props.walletConnect}/>
+    </>
+  );
+};
+
+const NFTInfoFrame = (props) => {
+  return (
+    <>
+      <NFTInfo walletConnect={props.walletConnect}/>
+    </>
+  );
+};
+
+const CollectibleInfoFrame = (props) => {
+  return (
+    <>
+      <CollectibleInfo walletConnect={props.walletConnect}/>
     </>
   );
 };

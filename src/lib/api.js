@@ -24,40 +24,6 @@ let walletAddress = undefined;
 export let isConnectWallet = false;
 
 let polarisContract = undefined;
-let pntContract = undefined;
-
-export async function connectWallet(walletJwk) {
-  polarisContract.connectWallet(walletJwk);
-  pntContract.connectWallet(walletJwk);
-  isConnectWallet = true;
-  walletAddress = await arweave.wallets.jwkToAddress(walletJwk);
-}
-
-export async function connectContract() {
-  polarisContract = new intelliContract(warp);
-  polarisContract.connectContract(polarisContractAddress);
-
-  pntContract = new intelliContract(warp);
-  pntContract.connectContract(pntAddress);
-
-  return {status: true, result: 'Connect contract success!'};
-}
-
-export async function getState(txID) {
-  const contract = new intelliContract(warp);
-  contract.connectContract(txID);
-
-  let status = true;
-  let result = '';
-  try {
-    result = (await contract.readState()).cachedValue.state;
-  } catch (err) {
-    status = false;
-    result = err;
-  }
-
-  return {status, result};
-}
 
 export async function transfer(tokenAddress, target, amount) {
   if (!isConnectWallet) {
@@ -192,6 +158,52 @@ export async function getDomainNames() {
 
 // common api
 
+export async function getMetaData(address) {
+  let tx = await arweave.transactions.get(address);
+  if (tx.data_size > 100*1024*1024) {
+    return {status: false, result: 'Metadata size exceeds 100Mb, skip!'};
+  }
+  let dataType = 'unknown/unknown';
+  tx.get('tags').forEach(tag => {
+    let key = tag.get('name', {decode: true, string: true});
+    if (key === 'Content-Type') {
+      dataType = tag.get('value', {decode: true, string: true});
+    }
+  });
+
+  let data = await arweave.transactions.getData(address, {decode: true});
+  return {status: true, result: {type: dataType, data: data}};
+}
+
+export async function connectWallet(walletJwk) {
+  polarisContract.connectWallet(walletJwk);
+  isConnectWallet = true;
+  walletAddress = await arweave.wallets.jwkToAddress(walletJwk);
+}
+
+export async function connectContract() {
+  polarisContract = new intelliContract(warp);
+  polarisContract.connectContract(polarisContractAddress);
+
+  return {status: true, result: 'Connect contract success!'};
+}
+
+export async function getState(txID) {
+  const contract = new intelliContract(warp);
+  contract.connectContract(txID);
+
+  let status = true;
+  let result = '';
+  try {
+    result = (await contract.readState()).cachedValue.state;
+  } catch (err) {
+    status = false;
+    result = err;
+  }
+
+  return {status, result};
+}
+
 export function getWalletAddress() {
   return walletAddress;
 }
@@ -216,6 +228,12 @@ export const isWellFormattedAddress = (input) => {
 export const getContractTxInfo = async (contractAddress) => {
   let tx = await arweave.transactions.get(contractAddress);
   tx.owner_address = await arweave.wallets.ownerToAddress(tx.owner);
+  tx.decodedTags = {};
+  tx.get('tags').forEach(tag => {
+    const key = tag.get('name', {decode: true, string: true});
+    const value = tag.get('value', {decode: true, string: true});
+    tx.decodedTags[key] = value;
+  });
   return {status: true, result: tx};
 };
 

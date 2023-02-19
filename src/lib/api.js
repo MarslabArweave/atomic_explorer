@@ -35,7 +35,7 @@ export async function transfer(tokenAddress, target, amount) {
   if (!isWellFormattedAddress(target)) {
     return {status: false, result: 'Target address is not valid!'};
   }
-  if (!minARBalanceCheck('0.01')) {
+  if (await minARBalanceCheck('0.01') === false) {
     return {status: false, result: 'You should have at least 0.01$AR in wallet to pay for network fee!'};
   }
   

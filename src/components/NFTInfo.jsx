@@ -126,13 +126,13 @@ export const NFTInfo = (props) => {
       {title: 'Belongs to Collectible', content: await renderAddress(contractInfo.decodedTags['collectible'], 'collectible')}, 
       {title: 'NFT Metadata Type', content: contractInfo.decodedTags['Content-Type']}, 
       {title: 'NFT Metadata', content: <>Arweave permanent link: <a href={`https://arweave.net/${params.address}`}>open link</a></>}, 
-      {title: 'Creator', content: await renderAddress(contractInfo.owner_address, 'wallet')},
+      {title: 'Creator', content: await renderAddress(contractInfo.owner_address, 'ar')},
       {title: 'Decimals', content: tokenState.decimals !== undefined ? tokenState.decimals : 'Unknown'},
       {title: 'Mint Date', content: mintDate.status ? mintDate.result : 'Unknown'},
       {title: 'Total Supply', content: totalSupply},
       {title: 'Holdlers', content: Object.keys(tokenState.balances).length},
       // {title: 'Transactions', content: ''}, // TODO
-      {title: 'Top 1 Holdler', content: await renderAddress(holdler, 'wallet')},
+      {title: 'Top 1 Holdler', content: await renderAddress(holdler, 'ar')},
       {title: 'Top 1 Ratio', content: `${(max/tokenState.totalSupply*100).toFixed(2)}%`},
     ]);
     
@@ -148,7 +148,7 @@ export const NFTInfo = (props) => {
     var address;
     if (target.length > 0 && target[0] === '@') {
       const name = target.substring(1);
-      const polarisTargetRet = await getTarget('wallet', name);
+      const polarisTargetRet = await getTarget('ar', name);
       if (!polarisTargetRet.status || 
           !polarisTargetRet.result ||
           !isWellFormattedAddress(polarisTargetRet.result.target)) {

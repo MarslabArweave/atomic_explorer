@@ -72,7 +72,7 @@ export const TokenInfo = (props) => {
       if (polarisNameRet.status === true && 
           polarisNameRet.result !== undefined && 
           polarisNameRet.result !== null &&
-          polarisNameRet.result.domain === 'wallet') {
+          polarisNameRet.result.domain === 'ar') {
         const domain = polarisNameRet.result.domain;
         const name = polarisNameRet.result.name;
         const polarisNameTargetRet = await getTarget(domain, name);
@@ -133,7 +133,7 @@ export const TokenInfo = (props) => {
     var address;
     if (target.length > 0 && target[0] === '@') {
       const name = target.substring(1);
-      const polarisTargetRet = await getTarget('wallet', name);
+      const polarisTargetRet = await getTarget('ar', name);
       if (!polarisTargetRet.status || 
           !polarisTargetRet.result ||
           !isWellFormattedAddress(polarisTargetRet.result.target)) {

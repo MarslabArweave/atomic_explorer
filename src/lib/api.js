@@ -5,7 +5,6 @@ import {
 import { selectWeightedPstHolder } from 'smartweave';
 import { mul, pow } from './math';
 import { intelliContract } from './intelliContract';
-import { stat } from 'fs';
 
 LoggerFactory.INST.logLevel('error');
 

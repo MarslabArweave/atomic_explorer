@@ -53,7 +53,7 @@ export const CollectibleInfo = (props) => {
     <>
       <p style={titleStyle}><b>{info.name}</b></p>
       <p style={titleStyle}>{info.description}</p>
-      {info.nftSet.map((addr)=>renderNFTCard(addr))}
+      {Object.keys(info.nftSet).map((addr)=>renderNFTCard(addr))}
     </>
   );
 };

@@ -5,8 +5,6 @@ import {
   getDateByTx, 
   getState, 
   getContractTxInfo, 
-  getName, 
-  getTarget, 
   getBalance, 
   isWellFormattedAddress,
   transfer
@@ -67,25 +65,6 @@ export const TokenInfo = (props) => {
     const renderWalletAddress = async (address) => {
       let addressContent = address;
 
-      // check if bind to a polaris name
-      const polarisNameRet = await getName(address);
-      if (polarisNameRet.status === true && 
-          polarisNameRet.result !== undefined && 
-          polarisNameRet.result !== null &&
-          polarisNameRet.result.domain === 'ar') {
-        const domain = polarisNameRet.result.domain;
-        const name = polarisNameRet.result.name;
-        const polarisNameTargetRet = await getTarget(domain, name);
-        if (polarisNameTargetRet.status === true && polarisNameTargetRet.result.target) {
-          addressContent = 
-            <a 
-              href={`https://arweave.net/wbo15PDbhXjpGMSGV8wh-XhlfFgjXKOZPw-wvEE24xI/#/${domain}/${name}`}
-            > 
-              {`${name}.${domain}`} {<LinkIcon />}
-            </a>;
-        }
-      }
-
       return addressContent;
     };
 
@@ -131,22 +110,10 @@ export const TokenInfo = (props) => {
 
   const onTransfer = async () => {
     var address;
-    if (target.length > 0 && target[0] === '@') {
-      const name = target.substring(1);
-      const polarisTargetRet = await getTarget('ar', name);
-      if (!polarisTargetRet.status || 
-          !polarisTargetRet.result ||
-          !isWellFormattedAddress(polarisTargetRet.result.target)) {
-        return {status: false, result:`Polaris name '${name}' is not point to a wallet!`};
-      } else {
-        address = polarisTargetRet.result.target;
-      }
-    } else {
-      if (!isWellFormattedAddress(target)) {
-        return {status: false, result:`Transaction ID you entered seems not valid!`};
-      }
-      address = target;
+    if (!isWellFormattedAddress(target)) {
+      return {status: false, result:`Transaction ID you entered seems not valid!`};
     }
+    address = target;
     
     const plainAmount = Number(mul(amount, pow(10, decimals)).toFixed(0));
     const ret = await transfer(params.address, address, plainAmount);
@@ -170,7 +137,6 @@ export const TokenInfo = (props) => {
         <Form.Group controlId="target">
           <Form.ControlLabel>Target</Form.ControlLabel>
           <Form.Control name="target" />
-          <Form.HelpText tooltip>Polaris name is supported. Format: '@PolarisName'(non-endings). e.g. @marslab</Form.HelpText>
         </Form.Group>
 
         <Form.Group controlId="amount">

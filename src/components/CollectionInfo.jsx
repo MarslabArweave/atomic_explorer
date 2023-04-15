@@ -16,18 +16,18 @@ const titleStyle = {
   color: 'white'
 };
 
-export const CollectibleInfo = (props) => {
+export const CollectionInfo = (props) => {
   const navigate = useNavigate();
   const params = useParams();
 
   const [info, setInfo] = React.useState();
 
   const fetchInfo = async () => {
-    const collectibleStateRet = await getState(params.address);
-    if (collectibleStateRet.status === false) {
-      return {status: false, result: 'Fetch collectible info failed. Please check if collectible address is correct!'};
+    const collectionStateRet = await getState(params.address);
+    if (collectionStateRet.status === false) {
+      return {status: false, result: 'Fetch collection info failed. Please check if collection address is correct!'};
     }
-    setInfo(collectibleStateRet.result);
+    setInfo(collectionStateRet.result);
     return {status: true, result: 'Load succeeded!'};
   };
 

@@ -1,24 +1,19 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { Navigation } from './components/Navigation';
-import { 
-  connectContract, 
-} from './lib/api';
 import 'rsuite/dist/rsuite.css';
 import './App.css';
 import { Home } from './components/Home';
 import { sleep } from 'warp-contracts';
 import { TokenInfo } from './components/TokenInfo';
 import { NFTInfo } from './components/NFTInfo';
-import { CollectibleInfo } from './components/CollectibleInfo';
+import { CollectionInfo } from './components/CollectionInfo';
 
 const App = () => {
   const [isContractConnected, setIsContractConnected] = React.useState(false);
   const [isWalletConnected, setIsWalletConnected] = React.useState(false);
 
   React.useEffect(async ()=>{
-    await connectContract();
-    await sleep(3000);
     setIsContractConnected(true);
   }, []);
 
@@ -38,7 +33,7 @@ const App = () => {
             <Route path="/" name="" element={<HomeFrame />} />
             <Route path="/token/:address" element={<TokenInfoFrame walletConnect={isWalletConnected}/>} />
             <Route path="/nft/:address" element={<NFTInfoFrame walletConnect={isWalletConnected}/>} />
-            <Route path="/collectible/:address" element={<CollectibleInfoFrame walletConnect={isWalletConnected}/>} />
+            <Route path="/collection/:address" element={<CollectionInfoFrame walletConnect={isWalletConnected}/>} />
           </Routes>
         </main>
       </div>
@@ -70,10 +65,10 @@ const NFTInfoFrame = (props) => {
   );
 };
 
-const CollectibleInfoFrame = (props) => {
+const CollectionInfoFrame = (props) => {
   return (
     <>
-      <CollectibleInfo walletConnect={props.walletConnect}/>
+      <CollectionInfo walletConnect={props.walletConnect}/>
     </>
   );
 };

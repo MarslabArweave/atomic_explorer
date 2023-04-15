@@ -8,21 +8,12 @@ import { intelliContract } from './intelliContract';
 
 LoggerFactory.INST.logLevel('error');
 
-// addresses
-const polarisContractAddress = 'tU5g9rDKAQJwYgi_leautnj52qxlqjyWhENO0tSQjq8';
-export const pntAddress = "tU5g9rDKAQJwYgi_leautnj52qxlqjyWhENO0tSQjq8";
-
 // const warp = WarpFactory.forLocal(1984);
 // const warp = WarpFactory.forTestnet();
-const warp = WarpFactory.forMainnet({
-  dbLocation: './cache/warp'+(new Date().getTime()).toString(), 
-  inMemory: false
-});
+const warp = WarpFactory.forMainnet();
 const arweave = warp.arweave;
 let walletAddress = undefined;
 export let isConnectWallet = false;
-
-let polarisContract = undefined;
 
 export async function transfer(tokenAddress, target, amount) {
   if (!isConnectWallet) {
@@ -66,95 +57,6 @@ export async function transfer(tokenAddress, target, amount) {
   return {status, result};
 }
 
-// Polaris name api
-
-export async function getOwner(domain, name) {
-  if (!polarisContract) {
-    return {status: false, result: 'Please connect contract first!'};
-  }
-
-  let status = true;
-  let result = '';
-  try {
-    result = (await polarisContract.viewState({
-      function: 'getOwner',
-      params: {
-        domain,
-        name
-      }
-    })).result;
-  } catch (err) {
-    status = false;
-    result = err;
-  }
-
-  return {status, result};
-}
-
-export async function getName(tx) {
-  if (!polarisContract) {
-    return {status: false, result: 'Please connect contract first!'};
-  }
-
-  let status = true;
-  let result = '';
-  try {
-    result = (await polarisContract.viewState({
-      function: 'getName',
-      params: {
-        tx
-      }
-    })).result;
-  } catch (err) {
-    status = false;
-    result = err;
-  }
-
-  return {status, result};
-}
-
-export async function getTarget(domain, name) {
-  if (!polarisContract) {
-    return {status: false, result: 'Please connect contract first!'};
-  }
-
-  let status = true;
-  let result = '';
-  try {
-    result = (await polarisContract.viewState({
-      function: 'getTarget',
-      params: {
-        domain,
-        name
-      }
-    })).result;
-  } catch (err) {
-    status = false;
-    result = err;
-  }
-
-  return {status, result};
-}
-
-export async function getDomainNames() {
-  if (!polarisContract) {
-    return {status: false, result: 'Please connect contract first!'};
-  }
-
-  let status = true;
-  let result = '';
-  try {
-    result = (await polarisContract.viewState({
-      function: 'getDomainNames',
-    })).result;
-  } catch (err) {
-    status = false;
-    result = err;
-  }
-
-  return {status, result};
-}
-
 // common api
 
 export async function getMetaData(address) {
@@ -175,16 +77,8 @@ export async function getMetaData(address) {
 }
 
 export async function connectWallet(walletJwk) {
-  polarisContract.connectWallet(walletJwk);
   isConnectWallet = true;
   walletAddress = await arweave.wallets.jwkToAddress(walletJwk);
-}
-
-export async function connectContract() {
-  polarisContract = new intelliContract(warp);
-  polarisContract.connectContract(polarisContractAddress);
-
-  return {status: true, result: 'Connect contract success!'};
 }
 
 export async function getState(txID) {
@@ -268,7 +162,9 @@ export async function getBalance(tokenAddress) {
     if (tokenAddress === 'ar') {
       result = arweave.ar.winstonToAr(await arweave.wallets.getBalance(getWalletAddress()));
     } else {
-      result = await (await warp.contract(tokenAddress).viewState({
+      const tokenContract = new intelliContract(warp);
+      tokenContract.connectContract(tokenAddress);
+      result = await (await tokenContract.viewState({
         function: 'balanceOf',
         target: getWalletAddress(),
       })).result.balance;

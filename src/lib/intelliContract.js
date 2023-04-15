@@ -1,10 +1,15 @@
+const dreNodeAddress = 'marslab.top'
+const dreNodePort = '1080'
+
 export class intelliContract {
-  constructor(warpInst) {
+  constructor(warpInst, env='mainnet') {
     this.warp = warpInst;
     this.contract4Read = undefined;
     this.contract4Write = undefined;
     this.walletConnected = false;
     this.contractConnected = false;
+    this.contractAddress = '';
+    this.env = env;
   }
 
   contractConnected() {
@@ -16,17 +21,14 @@ export class intelliContract {
   }
 
   connectContract(contractAddress) {
+    this.contractAddress = contractAddress;
     this.contract4Read = this.warp.contract(contractAddress);
     this.contract4Write = this.warp.contract(contractAddress);
     this.contract4Read.setEvaluationOptions({
-      internalWrites: true,
-      allowUnsafeClient: true,
-      // updateCacheForEachInteraction: true,
+      internalWrites: true
     });
     this.contract4Write.setEvaluationOptions({
-      internalWrites: true,
-      allowUnsafeClient: true,
-      // updateCacheForEachInteraction: true,
+      internalWrites: true
     });
     this.contractConnected = true;
   }
@@ -36,15 +38,37 @@ export class intelliContract {
     this.walletConnected = true;
   }
 
-  async viewState(input) {
-    return await this.contract4Read.viewState(input);
-  }
-
   async writeInteraction(input, options) {
     return await this.contract4Write.writeInteraction(input, options);
   }
 
-  async readState() {
-    return await this.contract4Read.readState();
+  async viewState(input) {
+    if (this.env === 'mainnet') {
+      const resp = await fetch(`//${dreNodeAddress}:${dreNodePort}/v1/contract/viewState?id=${this.contractAddress}&action=${JSON.stringify(input)}`);
+      const respJson = await resp.json();
+      if (respJson.code !== 200) {
+        throw respJson.msg;
+      }
+      return respJson.data;
+    } else {
+      return await this.contract4Read.viewState(input);
+    }
+  }
+
+  async readState(blockHeight) {
+    if (this.env === 'mainnet') {
+      var optionField = '';
+      if (blockHeight) {
+        optionField = `&option=${blockHeight}`;
+      }
+      const resp = await fetch(`//${dreNodeAddress}:${dreNodePort}/v1/contract/readState?id=${this.contractAddress}${optionField}`);
+      const respJson = await resp.json();
+      if (respJson.code !== 200) {
+        throw respJson.msg;
+      }
+      return respJson.data;
+    } else {
+      return await this.contract4Read.readState(blockHeight);
+    }
   }
 }

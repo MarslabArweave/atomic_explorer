@@ -13,7 +13,7 @@ const App = () => {
   const [isContractConnected, setIsContractConnected] = React.useState(false);
   const [isWalletConnected, setIsWalletConnected] = React.useState(false);
 
-  React.useEffect(async ()=>{
+  React.useEffect(()=>{
     setIsContractConnected(true);
   }, []);
 

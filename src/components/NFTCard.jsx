@@ -4,7 +4,7 @@ import QuestionIcon from '@rsuite/icons/legacy/Question';
 import VideoIcon from '@rsuite/icons/legacy/VideoCamera';
 import AudioIcon from '@rsuite/icons/legacy/FileAudioO';
 import refreshIcon from '@rsuite/icons/legacy/Refresh';
-import { getContractTxInfo, getMetaData, getState } from "../lib/api";
+import { getDataL2, getData, getState, getTags } from "../lib/api";
 import { mul, pow } from "../lib/math";
 
 const panelStyle = {
@@ -45,49 +45,41 @@ export const NFTCard = (props) => {
 
   const showContent = (content, defaultContent) => content ? content : defaultContent;
 
-  React.useEffect(async () => {
-    const tokenStateRet = await getState(props.address);
-    console.log(props.address, tokenStateRet);
-    if (tokenStateRet.status === false) {
-      return;
-    }
-    const tokenState = tokenStateRet.result;
-    const totalSupply = mul(tokenState.totalSupply, pow(10, -tokenState.decimals));
-    const contractInfo = (await getContractTxInfo(props.address)).result;
+  React.useEffect(() => {
+    const init = async () => {
+      const tokenStateRet = await getState(props.address);
+      console.log(props.address, tokenStateRet);
+      if (tokenStateRet.status === false) {
+        return;
+      }
+      const tokenState = tokenStateRet.result;
+      const totalSupply = mul(tokenState.totalSupply, pow(10, -tokenState.decimals));
+      const contractInfo = await getDataL2(props.address);
 
-    setNFTInfo({
-      symbol: tokenState.symbol,
-      name: tokenState.name,
-      description: tokenState.description,
-      supply: totalSupply,
-      type: contractInfo.decodedTags['Content-Type']
-    });
+      setNFTInfo({
+        symbol: tokenState.symbol,
+        name: tokenState.name,
+        description: tokenState.description,
+        supply: totalSupply,
+        type: contractInfo.type
+      });
 
-    const metadataRet = await getMetaData(props.address);
-    if (metadataRet.status) {
-      setPreview(metadataRet.result);
-    }
+      const assetData = await getData(contractInfo.asset);
+      const assetType = (await getTags(contractInfo.asset))['Content-Type'];
+      setPreview(assetData, assetType);
+    };
+    init();
   }, []);
 
-  const setPreview = async (asset) => {
+  const setPreview = async (assetData, assetType) => {
     var htmlToRender;
-    if (!asset) {
+    if (!assetData || !assetType) {
       setPreviewDom(<div style={containerStyle}></div>);
       return;
     }
-    switch (asset.type.split('/')[0]) {
+    switch (assetType.split('/')[0]) {
       case 'image':
-        htmlToRender = <img src={URL.createObjectURL(new File([asset.data], 'temp', {type: asset.type}))} width="180" />;
-        break;
-      case 'video':
-        htmlToRender = <VideoIcon style={{fontSize: 100, textAlign: 'center'}} />;
-        break;
-      case 'audio':
-        htmlToRender = <AudioIcon style={{fontSize: 100, textAlign: 'center'}} />;
-        break;
-      case 'text':
-        var enc = new TextDecoder("utf-8");
-        htmlToRender = <p>{enc.decode(asset.data).substring(0, 128)}</p>;
+        htmlToRender = <img src={URL.createObjectURL(new File([assetData], 'temp', {assetType}))} width="180" />;
         break;
       default:
         htmlToRender = <QuestionIcon style={{fontSize: 100, textAlign: 'center'}} />;

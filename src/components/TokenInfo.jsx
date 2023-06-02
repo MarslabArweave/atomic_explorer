@@ -4,7 +4,7 @@ import { useParams } from "react-router-dom";
 import { 
   getDateByTx, 
   getState, 
-  getContractTxInfo, 
+  getTxFromWarpGW, 
   getBalance, 
   isWellFormattedAddress,
   transfer
@@ -35,7 +35,7 @@ export const TokenInfo = (props) => {
   const [target, setTarget] = React.useState('');
   const [amount, setAmount] = React.useState(0);
 
-  React.useEffect(async () => {
+  React.useEffect(() => {
     fetchBalance();
   }, [props.walletConnect]);
 
@@ -58,7 +58,7 @@ export const TokenInfo = (props) => {
     }
     const tokenState = tokenStateRet.result;
     
-    const contractInfo = (await getContractTxInfo(params.address)).result;
+    const contractInfo = await getTxFromWarpGW(params.address);
     const mintDate = await getDateByTx(params.address);
     const totalSupply = mul(tokenState.totalSupply, pow(10, -tokenState.decimals));
 
@@ -90,7 +90,7 @@ export const TokenInfo = (props) => {
     setTokenInfoList([
       {title: 'Token Name', content: tokenState.name}, 
       {title: 'Token Address', content: params.address}, 
-      {title: 'Creator', content: await renderWalletAddress(contractInfo.owner_address)},
+      {title: 'Creator', content: await renderWalletAddress(contractInfo.owner)},
       {title: 'Decimals', content: tokenState.decimals !== undefined ? tokenState.decimals : 'Unknown'},
       {title: 'Mint Date', content: mintDate.status ? mintDate.result : 'Unknown'},
       {title: 'Total Supply', content: totalSupply},

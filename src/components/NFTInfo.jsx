@@ -4,11 +4,13 @@ import { useParams } from "react-router-dom";
 import { 
   getDateByTx, 
   getState, 
-  getContractTxInfo, 
+  getTxFromWarpGW, 
   getBalance, 
   isWellFormattedAddress,
   transfer,
-  getMetaData
+  getData,
+  getDataL2,
+  getTags
 } from '../lib/api';
 import { PageLoading } from './PageLoading/PageLoading';
 import { mul, pow } from '../lib/math';
@@ -40,7 +42,7 @@ export const NFTInfo = (props) => {
   const [target, setTarget] = React.useState('');
   const [amount, setAmount] = React.useState(0);
 
-  React.useEffect(async () => {
+  React.useEffect(() => {
     fetchBalance();
   }, [props.walletConnect]);
 
@@ -63,20 +65,16 @@ export const NFTInfo = (props) => {
     }
     const tokenState = tokenStateRet.result;
     
-    const contractInfo = (await getContractTxInfo(params.address)).result;
-    const mintDate = await getDateByTx(params.address);
+    const contractInfo = await getTxFromWarpGW(params.address);
     const totalSupply = mul(tokenState.totalSupply, pow(10, -tokenState.decimals));
-
-    const metadataRet = await getMetaData(params.address);
-    if (metadataRet.status) {
-      setMetaData(metadataRet.result);
-    }
-
-    const renderAddress = async (address, matchDomain) => {
-      let addressContent = address;
-
-      return addressContent;
-    };
+    const contractData = await getDataL2(params.address);
+    const assetData = await getData(contractData.asset);
+    const mintDate = await getDateByTx(contractData.asset);
+    const assetType = (await getTags(contractData.asset))['Content-Type'];
+    setMetaData({
+      asset: assetData,
+      type: assetType
+    });
 
     const calcTop1Holdler = () => {
       let max = 0;
@@ -102,16 +100,16 @@ export const NFTInfo = (props) => {
       {title: 'NFT Name', content: tokenState.name}, 
       {title: 'NFT Description', content: tokenState.description}, 
       {title: 'NFT Address', content: params.address}, 
-      {title: 'Belongs to Collection', content: await renderAddress(contractInfo.decodedTags['collection'], 'collection')}, 
-      {title: 'NFT Metadata Type', content: contractInfo.decodedTags['Content-Type']}, 
-      {title: 'NFT Metadata', content: <>Arweave permanent link: <a href={`https://arweave.net/${params.address}`}>open link</a></>}, 
-      {title: 'Creator', content: await renderAddress(contractInfo.owner_address, 'ar')},
+      {title: 'Belongs to Collection', content: tokenState.collection ? tokenState.collection : 'N/A'}, 
+      {title: 'NFT Metadata Type', content: contractData.type}, 
+      {title: 'NFT Metadata', content: <>Arweave permanent link: <a href={`https://arweave.net/${contractData.asset}`}>open link</a></>}, 
+      {title: 'Creator', content: await contractInfo.owner},
       {title: 'Decimals', content: tokenState.decimals !== undefined ? tokenState.decimals : 'Unknown'},
       {title: 'Mint Date', content: mintDate.status ? mintDate.result : 'Unknown'},
       {title: 'Total Supply', content: totalSupply},
       {title: 'Holdlers', content: Object.keys(tokenState.balances).length},
       // {title: 'Transactions', content: ''}, // TODO
-      {title: 'Top 1 Holdler', content: await renderAddress(holdler, 'ar')},
+      {title: 'Top 1 Holdler', content: holdler},
       {title: 'Top 1 Ratio', content: `${(max/tokenState.totalSupply*100).toFixed(2)}%`},
     ]);
     
@@ -143,20 +141,10 @@ export const NFTInfo = (props) => {
       htmlToRender = <p>Fail to load metadata!</p>;
       return;
     }
-    const dataUrl = URL.createObjectURL(new File([metaData.data], 'temp', {type: metaData.type}));
+    const dataUrl = URL.createObjectURL(new File([metaData.asset], 'temp', {type: metaData.type}));
     switch (metaData.type.split('/')[0]) {
       case 'image':
         htmlToRender = <img src={dataUrl} />;
-        break;
-      case 'video':
-        htmlToRender = <video src={dataUrl} type={metaData.type} controls></video>
-        break;
-      case 'audio':
-        htmlToRender = <audio src={dataUrl} type={metaData.type} controls></audio>
-        break;
-      case 'text':
-        var enc = new TextDecoder("utf-8");
-        htmlToRender = <p>{enc.decode(metaData.data)}</p>
         break;
       default:
         htmlToRender = <p>Type {metaData.type} is temporarily not supported!</p>;

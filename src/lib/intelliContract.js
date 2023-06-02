@@ -44,7 +44,7 @@ export class intelliContract {
 
   async viewState(input) {
     if (this.env === 'mainnet') {
-      const resp = await fetch(`//${dreNodeAddress}:${dreNodePort}/v1/contract/viewState?id=${this.contractAddress}&action=${JSON.stringify(input)}`);
+      const resp = await fetch(`https://${dreNodeAddress}:${dreNodePort}/v1/contract/viewState?id=${this.contractAddress}&action=${JSON.stringify(input)}`);
       const respJson = await resp.json();
       if (respJson.code !== 200) {
         throw respJson.msg;
@@ -61,7 +61,7 @@ export class intelliContract {
       if (blockHeight) {
         optionField = `&option=${blockHeight}`;
       }
-      const resp = await fetch(`//${dreNodeAddress}:${dreNodePort}/v1/contract/readState?id=${this.contractAddress}${optionField}`);
+      const resp = await fetch(`https://${dreNodeAddress}:${dreNodePort}/v1/contract/readState?id=${this.contractAddress}${optionField}`);
       const respJson = await resp.json();
       if (respJson.code !== 200) {
         throw respJson.msg;

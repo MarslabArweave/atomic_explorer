@@ -12,7 +12,7 @@ export const PageLoading = (props) => {
   const [isInit, setIsInit] = React.useState(false);
   const [initResult, setInitResult] = React.useState("");
 
-  useEffect(async () => {
+  useEffect(() => {
     setInitResult("");
     setIsInit(true);
     

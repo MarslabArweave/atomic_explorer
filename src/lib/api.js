@@ -1,7 +1,7 @@
 import {
   WarpFactory,
   LoggerFactory,
-} from 'warp-contracts';
+} from 'warp-contracts/web';
 import { arweaveWrapper } from './arweaveWrapper';
 import { intelliContract } from './intelliContract';
 

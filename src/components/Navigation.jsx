@@ -13,10 +13,10 @@ export const Navigation = (props) => {
     <div>
       <Navbar appearance='subtle'>
         <Navbar.Brand href="#">
-          <p style={{height: '1.5rem'}}>
+          <p style={{height: '1.5rem'}}><b>
             <span style={{color: 'red'}}>Atomic</span>
             <span style={{color: 'white'}}>Explorer</span>
-          </p>
+          </b></p>
         </Navbar.Brand>
         <Nav>
           <Nav.Menu title="Menu">
@@ -24,7 +24,7 @@ export const Navigation = (props) => {
               <Nav.Item icon={<HomeIcon />}>Home</Nav.Item>
             </Link>
             <Nav.Menu icon={<ContactIcon />} title="Contact" className='menuText'>
-              <a href='https://twitter.com/mARsLab_2022' className='menuText'>
+              <a href='https://twitter.com/marslab_arweave' className='menuText'>
                 <Nav.Item icon={<TwitterIcon />}>Twitter</Nav.Item>
               </a>
               <a href='https://github.com/marslab2022' className='menuText'>

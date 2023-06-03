@@ -109,14 +109,12 @@ export const TokenInfo = (props) => {
   };
 
   const onTransfer = async () => {
-    var address;
     if (!isWellFormattedAddress(target)) {
-      return {status: false, result:`Transaction ID you entered seems not valid!`};
+      return {status: false, result:`Transaction target you entered seems not valid!`};
     }
-    address = target;
     
     const plainAmount = Number(mul(amount, pow(10, decimals)).toFixed(0));
-    const ret = await transfer(params.address, address, plainAmount);
+    const ret = await transfer(params.address, target, plainAmount);
     await fetchBalance();
 
     return ret;

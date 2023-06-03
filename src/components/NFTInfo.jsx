@@ -124,7 +124,7 @@ export const NFTInfo = (props) => {
   const onTransfer = async () => {
     var address;
     if (!isWellFormattedAddress(target)) {
-      return {status: false, result:`Transaction ID you entered seems not valid!`};
+      return {status: false, result:`Transaction target you entered seems not valid!`};
     }
     address = target;
     

@@ -2,7 +2,7 @@ import React from 'react';
 import { Form, Panel } from 'rsuite';
 import { useParams } from "react-router-dom";
 import { 
-  getDateByTx, 
+  getDateByTxL2, 
   getState, 
   getTxFromWarpGW, 
   getBalance, 
@@ -69,7 +69,7 @@ export const NFTInfo = (props) => {
     const totalSupply = mul(tokenState.totalSupply, pow(10, -tokenState.decimals));
     const contractData = await getDataL2(params.address);
     const assetData = await getData(contractData.asset);
-    const mintDate = await getDateByTx(contractData.asset);
+    const mintDate = await getDateByTxL2(params.address);
     const assetType = (await getTags(contractData.asset))['Content-Type'];
     setMetaData({
       asset: assetData,
@@ -105,7 +105,7 @@ export const NFTInfo = (props) => {
       {title: 'NFT Metadata', content: <>Arweave permanent link: <a href={`https://arweave.net/${contractData.asset}`}>open link</a></>}, 
       {title: 'Creator', content: await contractInfo.owner},
       {title: 'Decimals', content: tokenState.decimals !== undefined ? tokenState.decimals : 'Unknown'},
-      {title: 'Mint Date', content: mintDate.status ? mintDate.result : 'Unknown'},
+      {title: 'Mint Date', content: mintDate},
       {title: 'Total Supply', content: totalSupply},
       {title: 'Holdlers', content: Object.keys(tokenState.balances).length},
       // {title: 'Transactions', content: ''}, // TODO

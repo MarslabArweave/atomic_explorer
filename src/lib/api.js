@@ -106,6 +106,19 @@ export const getDataL2 = async (contractAddress) => {
   }
 };
 
+export const getDateByTxL2 = async (contractAddress) => {
+  try {
+    const resp = await fetch(`https://gw.warp.cc/sonar/gateway/v2/contract?txId=${contractAddress}`);
+    const respJson = await resp.json();
+    
+    var txDate = new Date();
+    txDate.setTime(respJson.blockTimestamp * 1000);
+    return txDate.toLocaleDateString();
+  } catch (err) {
+    console.error(err);
+  }
+};
+
 export const getTx = async (contractAddress) => {
   return await arWrapper.getTx(contractAddress);
 };

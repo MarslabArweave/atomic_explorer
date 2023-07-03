@@ -2,7 +2,7 @@ import React from 'react';
 import { Form, Panel } from 'rsuite';
 import { useParams } from "react-router-dom";
 import { 
-  getDateByTx, 
+  getDateByTxL2, 
   getState, 
   getTxFromWarpGW, 
   getBalance, 
@@ -59,7 +59,7 @@ export const TokenInfo = (props) => {
     const tokenState = tokenStateRet.result;
     
     const contractInfo = await getTxFromWarpGW(params.address);
-    const mintDate = await getDateByTx(params.address);
+    const mintDate = await getDateByTxL2(params.address);
     const totalSupply = mul(tokenState.totalSupply, pow(10, -tokenState.decimals));
 
     const renderWalletAddress = async (address) => {
@@ -92,7 +92,7 @@ export const TokenInfo = (props) => {
       {title: 'Token Address', content: params.address}, 
       {title: 'Creator', content: await renderWalletAddress(contractInfo.owner)},
       {title: 'Decimals', content: tokenState.decimals !== undefined ? tokenState.decimals : 'Unknown'},
-      {title: 'Mint Date', content: mintDate.status ? mintDate.result : 'Unknown'},
+      {title: 'Mint Date', content: mintDate},
       {title: 'Total Supply', content: totalSupply},
       {title: 'Holdlers', content: Object.keys(tokenState.balances).length},
       // {title: 'Transactions', content: ''}, // TODO
